@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fff3b8">
+  <meta name="description" content="Extract editable text from images privately in your browser.">
+  <title>Textly — Image to text</title>
+  <link rel="stylesheet" href="redesign.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="main-content" id="extractor">
+      <header class="topbar">
+        <a class="brand" href="#extractor" aria-label="Textly home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 28 28" fill="none"><path d="M8 5.5h8.5L21 10v12.5H8a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M16 5.8V10h4.2M10 14h8M10 17.5h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </span>
+          <span>textly<span class="brand-period">.</span></span>
+        </a>
+        <div class="topbar-right">
+          <span class="secure-pill"><span></span> Private</span>
+          <span class="nav-count hidden" id="historyCount" aria-label="Saved scans">0</span>
+        </div>
+      </header>
+
+      <div class="content-wrap">
+        <section class="welcome">
+          <h1>Image to <span>text.</span></h1>
+          <p class="welcome-copy">Upload a photo or scan with your camera.</p>
+        </section>
+
+        <section class="workspace-grid" aria-label="Text scanner">
+          <div class="source-column">
+            <div class="section-heading">
+              <div><h2>Add an image</h2><p>English text recognition</p></div>
+            </div>
+
+            <div class="source-tabs" role="tablist" aria-label="Image source">
+              <button class="source-tab active" id="uploadTab" type="button" role="tab" aria-selected="true" aria-controls="uploadPanel">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><circle cx="8.5" cy="9" r="1.5"/><path d="m20.5 15-5-5L6 20"/></svg>
+                Upload
+              </button>
+              <button class="source-tab" id="cameraTab" type="button" role="tab" aria-selected="false" aria-controls="cameraPanel">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h2l1.2-2h4.6l1.2 2h2A2.5 2.5 0 0 1 20 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-9Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                Camera
+              </button>
+            </div>
+
+            <div class="source-panel" id="uploadPanel" role="tabpanel" aria-labelledby="uploadTab">
+              <input id="fileInput" type="file" accept="image/*" hidden>
+              <button class="dropzone" id="dropzone" type="button">
+                <span class="upload-illustration" aria-hidden="true">
+                  <svg viewBox="0 0 52 52" fill="none"><path d="M26 34V12m0 0-8 8m8-8 8 8M12 32v8a3 3 0 0 0 3 3h22a3 3 0 0 0 3-3v-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="drop-title">Choose an image</span>
+                <span class="drop-subtitle">or drop it here</span>
+                <span class="file-types">JPG, PNG or WEBP · 20 MB max</span>
+              </button>
+              <div class="selected-file hidden" id="selectedFile">
+                <div class="file-thumb" id="fileThumb"></div>
+                <div class="file-meta"><strong id="fileName"></strong><span id="fileSize"></span></div>
+                <button class="icon-button remove-file" id="removeFile" type="button" aria-label="Remove image">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>
+                </button>
+              </div>
+              <button class="primary-button" id="extractButton" type="button" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5a1 1 0 0 1 1-1h2m11 0h1a1 1 0 0 1 1 1v2m0 10v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M8 9h8M8 12h8M8 15h5"/></svg>
+                Extract text <span class="button-arrow">→</span>
+              </button>
+            </div>
+
+            <div class="source-panel hidden" id="cameraPanel" role="tabpanel" aria-labelledby="cameraTab">
+              <div class="camera-stage" id="cameraStage">
+                <video id="cameraVideo" playsinline muted></video>
+                <canvas id="captureCanvas" hidden></canvas>
+                <div class="camera-placeholder" id="cameraPlaceholder">
+                  <span class="camera-placeholder-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h2l1.2-2h4.6l1.2 2h2A2.5 2.5 0 0 1 20 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-9Z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+                  <strong>Camera scan</strong>
+                  <span>Hold the text steady and in good light.</span>
+                </div>
+                <div class="scan-frame hidden" id="scanFrame"><i></i><i></i><i></i><i></i></div>
+                <span class="camera-live-indicator hidden" id="cameraLiveIndicator"><span></span> LIVE</span>
+              </div>
+              <div class="camera-actions">
+                <button class="secondary-button" id="startCameraButton" type="button">Open camera</button>
+                <button class="primary-button camera-capture" id="captureButton" type="button" disabled><span class="capture-dot"></span> Capture</button>
+              </div>
+              <label class="live-toggle-row" for="liveScanToggle">
+                <span class="toggle-copy"><strong>Live scan</strong><span>Update text automatically</span></span>
+                <input type="checkbox" id="liveScanToggle" class="switch-input" disabled>
+                <span class="switch" aria-hidden="true"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="result-column">
+            <div class="section-heading">
+              <div><h2>Result</h2><p>Edit before copying.</p></div>
+            </div>
+            <div class="result-card">
+              <div class="result-toolbar">
+                <div class="result-label"><span class="result-status-dot" id="resultStatusDot"></span><span id="resultStatus">Ready</span></div>
+                <span class="confidence-badge" id="confidenceBadge" title="OCR confidence estimate">—</span>
+                <button class="copy-button" id="copyButton" type="button" disabled>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
+                  <span>Copy</span>
+                </button>
+              </div>
+              <div class="result-body">
+                <div class="result-empty" id="resultEmpty">
+                  <strong>Your text will appear here</strong>
+                  <span>Choose an image to get started.</span>
+                </div>
+                <div class="processing-state hidden" id="processingState">
+                  <span class="loader"></span>
+                  <strong id="processingTitle">Reading image…</strong>
+                  <span id="processingMessage">Preparing scanner</span>
+                  <div class="progress-track"><span id="progressBar"></span></div>
+                  <span class="progress-percent" id="progressPercent">0%</span>
+                </div>
+                <textarea class="result-text hidden" id="resultText" aria-label="Extracted text" placeholder="Extracted text"></textarea>
+              </div>
+              <div class="result-footer">
+                <span id="characterCount">0 characters</span>
+                <button class="clear-button" id="clearButton" type="button" disabled>Clear</button>
+              </div>
+            </div>
+            <div class="accuracy-note"><strong>Confidence is an estimate.</strong> Check important names and numbers.</div>
+          </div>
+        </section>
+
+        <section class="history-section" id="history">
+          <div class="history-header">
+            <h2>Recent scans <span id="historyHeadingCount">0</span></h2>
+            <button class="clear-history-button hidden" id="clearHistoryButton" type="button">Clear all</button>
+          </div>
+          <div class="history-list" id="historyList">
+            <div class="history-empty" id="historyEmpty">
+              <span class="history-empty-icon" aria-hidden="true"></span>
+              <div><strong>No scans yet</strong><span>Your scans will show up here.</span></div>
+            </div>
+          </div>
+        </section>
+        <footer class="page-footer"><span>Textly</span><span>Images are processed in your browser.</span></footer>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
